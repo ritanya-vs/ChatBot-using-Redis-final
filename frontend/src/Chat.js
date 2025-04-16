@@ -8,6 +8,25 @@ const Chat = ({ sessionToken }) => {
   const [message, setMessage] = useState("");
   const [unreadCounts, setUnreadCounts] = useState({});
   const wsManagerRef = useRef(null);
+  const [username, setUsername] = useState("");
+
+  useEffect(() => {
+    const fetchUsername = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:8000/auth/whoami?session_token=${sessionToken}`
+        );
+        const data = await response.json();
+        setUsername(data.username);
+      } catch (err) {
+        console.error("Failed to fetch username", err);
+      }
+    };
+  
+    if (sessionToken) {
+      fetchUsername();
+    }
+  }, [sessionToken]);
 
   useEffect(() => {
     wsManagerRef.current = new WebSocketManager(sessionToken, (msg) => {
@@ -68,7 +87,7 @@ const Chat = ({ sessionToken }) => {
   return (
     <div style={styles.container}>
       <div style={styles.sidebar}>
-        <h3 style={{ marginBottom: "10px" }}>Chats ({sessionToken})</h3>
+      <h3 style={{ marginBottom: "10px" }}>👤 {username ? `Logged in as ${username}` : "Loading..."}</h3>
         {contacts.map((contact) => (
           <div
             key={contact}

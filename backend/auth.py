@@ -60,7 +60,6 @@ def login(credentials: UserCredentials):
 
     return {"session_token": session_token}
 
-
 def authenticate_user(session_token: str):
     """Validates a session token and returns the associated username."""
     
@@ -72,4 +71,16 @@ def authenticate_user(session_token: str):
     if username is None:
         return None  # Invalid session token
     
-    return username  # Return decoded username
+    return username  # May be bytes, decode if needed
+
+@router.get("/whoami")
+def whoami(session_token: str):
+    """
+    Returns the username associated with a session token.
+    """
+    username = authenticate_user(session_token)
+    if not username:
+        raise HTTPException(status_code=401, detail="Invalid session token")
+    return {
+        "username": username if isinstance(username, str) else username.decode()
+    }
