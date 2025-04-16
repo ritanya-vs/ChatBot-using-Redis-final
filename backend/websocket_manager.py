@@ -4,6 +4,7 @@ from redis_client import *
 import redis
 import asyncio
 import json
+from datetime import datetime,timezone
 
 class WebSocketManager:
     def __init__(self):
@@ -40,6 +41,8 @@ class WebSocketManager:
 
         # Remove user from Redis online users set
         self.redis_client.srem("online_users", user_id)
+        timestamp = datetime.now(timezone.utc).isoformat()
+        self.redis_client.hset("user:last_seen", user_id, timestamp)
 
     async def send_message(self, sender_id: str, recipient_id: str, message: str):
         """Send message to a recipient and store it in Redis."""

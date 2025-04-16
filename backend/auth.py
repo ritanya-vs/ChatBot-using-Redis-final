@@ -84,3 +84,5 @@ def whoami(session_token: str):
     return {
         "username": username if isinstance(username, str) else username.decode()
     }
+    
+

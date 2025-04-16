@@ -9,6 +9,8 @@ const Chat = ({ sessionToken }) => {
   const [unreadCounts, setUnreadCounts] = useState({});
   const wsManagerRef = useRef(null);
   const [username, setUsername] = useState("");
+  const [contactStatuses, setContactStatuses] = useState({});
+
 
   useEffect(() => {
     const fetchUsername = async () => {

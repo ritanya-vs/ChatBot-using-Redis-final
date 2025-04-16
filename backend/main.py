@@ -1,10 +1,12 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends,Query
 from fastapi.middleware.cors import CORSMiddleware
 from websocket_manager import WebSocketManager
 from auth import authenticate_user
 from auth import router as auth_router
 from dotenv import load_dotenv
 from redis_client import get_redis_connection
+from datetime import datetime,timezone,timedelta
+
 import os
 
 # Load environment variables
@@ -53,7 +55,23 @@ async def websocket_endpoint(websocket: WebSocket):
         print(f"Error: {e}")  # Handle any unexpected errors
     finally:
         await manager.disconnect(user_id)  
-        
+ 
+@app.get("/status/{username}")
+def get_user_status(username: str):
+    redis_client = get_redis_connection()
+    online = redis_client.sismember("online_users", username)
+    last_seen = redis_client.hget("user:last_seen", username)
+
+    dt_utc = datetime.fromisoformat(last_seen)
+    ist = timezone(timedelta(hours=5, minutes=30))
+    dt_ist = dt_utc.astimezone(ist)
+    formatted_time = dt_ist.strftime("%B %d, %Y %I:%M %p")
+    return {
+        "username": username,
+        "online": bool(online),
+        "last_seen": formatted_time
+    }    
+       
 # Redis Ping Test
 @app.get("/ping_redis")
 async def ping_redis():
