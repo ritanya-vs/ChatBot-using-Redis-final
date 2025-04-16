@@ -30,43 +30,53 @@ const Chat = ({ sessionToken }) => {
     }
   }, [sessionToken]);
 
-  // 1️⃣ useEffect to fetch username
-useEffect(() => {
-  // fetchUsername logic
-}, [sessionToken]);
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      const updatedStatuses = {};
 
-// 2️⃣ useEffect to setup WebSocketManager
-useEffect(() => {
-  // WebSocketManager logic
-}, [sessionToken]);
-
-// 3️⃣ 🔄 NEW useEffect to auto-refresh user statuses
-useEffect(() => {
-  const fetchStatuses = async () => {
-    const updatedStatuses = {};
-
-    for (const contact of contacts) {
-      try {
-        const res = await fetch(`http://localhost:8000/status/${contact}`);
-        const data = await res.json();
-        updatedStatuses[contact] = data;
-      } catch (err) {
-        console.error(`Error fetching status for ${contact}`, err);
+      for (const contact of contacts) {
+        try {
+          const res = await fetch(`http://localhost:8000/status/${contact}`);
+          const data = await res.json();
+          updatedStatuses[contact] = data;
+        } catch (err) {
+          console.error(`Error fetching status for ${contact}`, err);
+        }
       }
+
+      setContactStatuses(updatedStatuses);
+    };
+
+    if (contacts.length > 0) {
+      fetchStatuses();
     }
 
-    setContactStatuses(updatedStatuses);
-  };
-
-  if (contacts.length > 0) {
-    fetchStatuses();
-  }
-
-  const interval = setInterval(fetchStatuses, 5000);
-  return () => clearInterval(interval);
-}, [contacts]);
+    const interval = setInterval(fetchStatuses, 5000);
+    return () => clearInterval(interval);
+  }, [contacts]);
 
   
+  useEffect(() => {
+    const fetchContacts = async () => {
+      if (!sessionToken || !username) return;
+      
+      try {
+        const usersResponse = await fetch("http://localhost:8000/auth/users");
+        const usersData = await usersResponse.json();
+        
+        const initialContacts = usersData.users.filter(user => user !== username);
+        setContacts(initialContacts);
+
+      } catch (error) {
+        console.error("Failed to fetch contacts:", error);
+      }
+    };
+
+    if (sessionToken) {
+      fetchContacts();
+    }
+  }, [sessionToken,username]);
+
 
   useEffect(() => {
     wsManagerRef.current = new WebSocketManager(sessionToken, (msg) => {

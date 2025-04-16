@@ -84,5 +84,11 @@ def whoami(session_token: str):
     return {
         "username": username if isinstance(username, str) else username.decode()
     }
-    
+  
+@router.get("/users")
+def get_all_users():
+    users = redis_client.hkeys("users")
+    usernames = [u for u in users]
+    return {"users": usernames}
+  
 

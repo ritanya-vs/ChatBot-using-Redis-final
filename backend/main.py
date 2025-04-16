@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends,Query
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends,Query,HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from websocket_manager import WebSocketManager
 from auth import authenticate_user
@@ -74,6 +74,7 @@ def get_user_status(username: str):
         "last_seen": formatted_time
     }    
        
+
 # Redis Ping Test
 @app.get("/ping_redis")
 async def ping_redis():
