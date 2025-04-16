@@ -61,11 +61,13 @@ def get_user_status(username: str):
     redis_client = get_redis_connection()
     online = redis_client.sismember("online_users", username)
     last_seen = redis_client.hget("user:last_seen", username)
-
-    dt_utc = datetime.fromisoformat(last_seen)
-    ist = timezone(timedelta(hours=5, minutes=30))
-    dt_ist = dt_utc.astimezone(ist)
-    formatted_time = dt_ist.strftime("%B %d, %Y %I:%M %p")
+    if (last_seen):
+        dt_utc = datetime.fromisoformat(last_seen)
+        ist = timezone(timedelta(hours=5, minutes=30))
+        dt_ist = dt_utc.astimezone(ist)
+        formatted_time = dt_ist.strftime("%B %d, %Y %I:%M %p")
+    else:
+        formatted_time = ""
     return {
         "username": username,
         "online": bool(online),

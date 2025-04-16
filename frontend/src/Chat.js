@@ -30,6 +30,44 @@ const Chat = ({ sessionToken }) => {
     }
   }, [sessionToken]);
 
+  // 1️⃣ useEffect to fetch username
+useEffect(() => {
+  // fetchUsername logic
+}, [sessionToken]);
+
+// 2️⃣ useEffect to setup WebSocketManager
+useEffect(() => {
+  // WebSocketManager logic
+}, [sessionToken]);
+
+// 3️⃣ 🔄 NEW useEffect to auto-refresh user statuses
+useEffect(() => {
+  const fetchStatuses = async () => {
+    const updatedStatuses = {};
+
+    for (const contact of contacts) {
+      try {
+        const res = await fetch(`http://localhost:8000/status/${contact}`);
+        const data = await res.json();
+        updatedStatuses[contact] = data;
+      } catch (err) {
+        console.error(`Error fetching status for ${contact}`, err);
+      }
+    }
+
+    setContactStatuses(updatedStatuses);
+  };
+
+  if (contacts.length > 0) {
+    fetchStatuses();
+  }
+
+  const interval = setInterval(fetchStatuses, 5000);
+  return () => clearInterval(interval);
+}, [contacts]);
+
+  
+
   useEffect(() => {
     wsManagerRef.current = new WebSocketManager(sessionToken, (msg) => {
       const contact = msg.sender === sessionToken ? msg.recipient : msg.sender;
@@ -90,7 +128,10 @@ const Chat = ({ sessionToken }) => {
     <div style={styles.container}>
       <div style={styles.sidebar}>
       <h3 style={{ marginBottom: "10px" }}>👤 {username ? `Logged in as ${username}` : "Loading..."}</h3>
-        {contacts.map((contact) => (
+      {contacts.map((contact) => {
+        const status = contactStatuses[contact];
+
+        return (
           <div
             key={contact}
             onClick={() => openChat(contact)}
@@ -100,12 +141,22 @@ const Chat = ({ sessionToken }) => {
                 contact === activeChat ? "#d1f0c1" : "transparent",
             }}
           >
-            {contact}
+            <div style={{ fontWeight: "bold" }}>{contact}</div>
+            <div style={{ fontSize: "12px", color: "gray" }}>
+              {status?.online
+                ? "Online"
+                : status?.last_seen
+                ? `Last seen: ${status.last_seen}`
+                : "Loading..."}
+            </div>
+
             {unreadCounts[contact] > 0 && (
               <span style={styles.unread}>{unreadCounts[contact]}</span>
             )}
           </div>
-        ))}
+        );
+      })}
+
       </div>
 
       <div style={styles.chatSection}>
